@@ -2,14 +2,16 @@
   "name": "file_uploader",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "main.js",
   "scripts": {
+    "start": "node main.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@ngrok/ngrok": "^1.5.1",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "mime-types": "^3.0.1",
