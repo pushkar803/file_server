@@ -43,6 +43,52 @@ app.post('/upload', upload.single('file'), (req, res) => {
     });
 });
 
+app.post('/upload-base64', express.json(), (req, res) => {
+    const { base64Content, fileName, mimeType } = req.body;
+
+    if (!base64Content) {
+        return res.status(400).json({ error: 'No base64 content provided' });
+    }
+
+    if (!fileName) {
+        return res.status(400).json({ error: 'No file name provided' });
+    }
+
+    try {
+        // Remove data URL prefix if present (e.g., "data:image/jpeg;base64,")
+        const base64Data = base64Content.replace(/^data:[^;]+;base64,/, '');
+
+        // Decode base64 to buffer
+        const fileBuffer = Buffer.from(base64Data, 'base64');
+
+        // Generate file ID and extension
+        const ext = path.extname(fileName) || (mimeType ? '.' + mimeType.split('/')[1] : '');
+        const id = nanoid(10);
+        const newFilename = `${id}${ext}`;
+        const newPath = path.join('uploads', newFilename);
+
+        // Write file to disk
+        fs.writeFileSync(newPath, fileBuffer);
+
+        // Store file record
+        fileMap.set(id, {
+            path: newPath,
+            originalName: fileName
+        });
+
+        const fileUrl = `${DOMAIN}/file/${id}${ext}`;
+        res.json({
+            id,
+            url: fileUrl,
+            extension: ext.slice(1) // Remove the dot from extension
+        });
+
+    } catch (error) {
+        console.error('Error processing base64 upload:', error);
+        res.status(500).json({ error: 'Failed to process base64 content' });
+    }
+});
+
 app.get('/file/:id', (req, res) => {
     const id = req.params.id.split('.')[0]; // Remove extension from id if present
     const fileRecord = fileMap.get(id);
